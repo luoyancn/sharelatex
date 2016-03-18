@@ -1,45 +1,161 @@
-\documentclass[a4paper,12pt]{book}
+\documentclass[a4paper,12pt]{report}
+\usepackage{indentfirst}
+\usepackage{tikz}
 \usepackage[utf8]{inputenc}
+\usepackage[explicit]{titlesec}
+\usepackage[Bjornstrup]{fncychap}
+
+\usepackage{tikz}
+\usetikzlibrary{matrix}
+\usepackage{fancyhdr}
+\usepackage[dutch]{babel}
+\usepackage[babel=true]{csquotes}
+\usepackage[T1]{fontenc}
+\usepackage[explicit]{titlesec}
+\usepackage{xcolor}
+\usepackage{charter}
+ 
+\definecolor{mybluei}{RGB}{105,105,105}
+\definecolor{myblueii}{RGB}{105,105,105}
+\usepackage{rotating, graphicx}
 \usepackage{titlesec}
+\usepackage{tcolorbox}
+\newcommand\ChapterFont{\rmfamily\selectfont\huge}
+\newcommand\SectionFont{\bfseries\rmfamily\selectfont\Large}
  
-\titleformat
-{\chapter} % command
-[display] % shape
-{\bfseries\Large\itshape} % format
-{Story No. \ \thechapter} % label
-{0.5ex} % sep
-{
-    \rule{\textwidth}{1pt}
-    \vspace{1ex}
-    \centering
-} % before-code
-[
-\vspace{-0.5ex}%
-\rule{\textwidth}{0.3pt}
-] % after-code
+\titleformat{\chapter}[block]
+ {\normalfont\ChapterFont\huge\color{myblueii}}%\raisebox{-0.6\height}
+ {\tcbset{colframe=mybluei, boxrule=0.8pt, left=0pt, right=0pt, top=0pt, bottom=0pt}\raisebox{-0.48\height}{\rotatebox{90}{\tcbox[boxsep=4pt, colback= white ]{\color{mybluei}\Large\chaptertitlename}}}\hskip 0.25em\mbox{\tcbox[ boxsep=12pt, colback=mybluei, tcbox raise = -35pt]{\color{white}\bfseries\fontsize{70}{70}\selectfont\thechapter}}}
+ {0.5em}
+ {#1\vskip0.6ex\endgraf\titlerule[1ex]}[]
  
+ \titleformat{name=\chapter,numberless}[block]
+ {\normalfont\selectfont\huge\color{myblueii}}
+ {}
+ {0pt}
+ {\parbox[b]{70pt}{\mbox{}}%
+ \hspace{15pt}%
+ \parbox[b]{\dimexpr\textwidth-15pt}{%
+ \raggedright\bfseries#1\vskip6pt%
+ }%
+ }
+ \titleformat{\section}
+ {\normalfont\small\sffamily\SectionFont\color{myblueii}}
+ {\colorbox{mybluei}{%
+        \parbox[c][16pt][c]{40pt}{%
+            \centering\textcolor{white}{\SectionFont\Large\rmfamily\thesection}%
+        }%
+    }%
+ }
+ {1em}
+ {#1}
+ [\vspace{-0.755\baselineskip}%
+ \color{myblueii}\hspace*{\dimexpr40pt+2\fboxsep\relax}%
+ \rule{\dimexpr\textwidth-40pt-2\fboxsep\relax}{1pt}%
+ ]
+  \usepackage{amsmath, amsthm, amssymb, amsfonts, enumerate}%, dlfltxbcodetips
+ \renewcommand{\qedsymbol}{$\blacksquare$}
+
+\titleformat{\section}[block]
+  {\normalfont\huge\bfseries}
+  {\tikz\node[
+      font=\huge\bfseries\color{white},
+      fill=gray!50,
+      rounded corners=20pt,
+      minimum height=1.6cm,
+      text width=3em,
+      align=center,
+      inner xsep=0pt] {\parbox{1.5em}{\thechapter\hfill}};%
+  }
+  {-1em}
+  {\tikz\node[
+      fill=gray,
+      font=\Large\sffamily\color{white},
+      minimum height=1.6cm,
+      text width=\the\dimexpr\textwidth-2em\relax,
+      align=center,inner xsep=0pt] {#1};%
+  }
  
-\titleformat{\section}[wrap]
-{\normalfont\bfseries}
-{\thesection.}{0.5em}{}
- 
-\titlespacing{\section}{12pc}{1.5ex plus .1ex minus .2ex}{1pc}
- 
+\title{42}
+\author{Jane Doe}
+\date{\today}
  
 \begin{document}
  
-\chapter{Let's begin}
+\maketitle
  
-\section{First Attempt}
+\renewcommand*\contentsname{Summary}
+\tableofcontents
+
  
+\part{First Part of this document}
+ 
+\chapter{First}
+ 
+\section{Introduction}
+
 Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do 
 eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut 
-enim ad minim veniam, quis nostrud exercitation ullamco laboris...
- 
-\section{Second attempt}
- 
+enim ad minim veniam, quis nostrud exercitation ullamco...
+
+
 Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do 
 eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut 
-enim ad minim veniam, quis nostrud exercitation ullamco laboris...
+enim ad minim veniam, quis nostrud exercitation ullamco...
+
+\chapter{ZeroMQ}
+ 
+\section{Summery}
+
+"We use ZeroMQ to assist in aggregating thousands of events occurring every minute across our global
+network of telecommunications servers so that we can accurately report and monitor for situations that
+require our attention. ZeroMQ made the development of the system not only easier, but faster to develop
+and more robust and fault-tolerant than we had originally planned in our original design.
+"We’re able to easily add and remove clients from the network without the loss of any message. If we
+need to enhance the server portion of our system, we can stop and restart it as well without having to
+worry about stopping all of the clients ﬁrst. The built-in buffering of ZeroMQ makes this all possible."
+"I was looking at creating some kind of service bus connecting all kinds of services together. There were
+already some products that implemented a broker, but they did not have the functionality I needed. By
+accident, I stumbled upon ZeroMQ, which is awesome. It’s very lightweight, lean, simple and easy to
+follow because the guide is very complete and reads very well. I’ve actually implemented the Titanic
+pattern and the Majordomo broker with some additions (client/worker authentication and workers
+sending a catalog explaining what they provide and how they should be addressed).
+"The beautiful thing about ZeroMQ is the fact that it is a library and not an application. You can mold it
+however you like and it simply puts boring things like queuing, reconnecting, TCP sockets and such to
+the background, making sure you can concentrate on what is important to you. I’ve implemented all
+kinds of workers/clients and the broker in Ruby, because that is the main language we use for
+development, but also some PHP clients to connect to the bus from existing PHP webapps. We use this
+service bus for cloud services, connecting all kinds of platform devices to a service bus exposing
+functionality for automation.
+"ZeroMQ is very easy to understand and if you spend a day with the guide, you’ll have good knowledge
+of how it works. I’m a network engineer, not a software developer, but managed to create a very nice
+solution for our automation needs! ZeroMQ: Thank you very much!"
+
+\newpage 
+
+\section{Winner}
+"We use ZeroMQ to assist in aggregating thousands of events occurring every minute across our global
+network of telecommunications servers so that we can accurately report and monitor for situations that
+require our attention. ZeroMQ made the development of the system not only easier, but faster to develop
+and more robust and fault-tolerant than we had originally planned in our original design.
+"We’re able to easily add and remove clients from the network without the loss of any message. If we
+need to enhance the server portion of our system, we can stop and restart it as well without having to
+worry about stopping all of the clients ﬁrst. The built-in buffering of ZeroMQ makes this all possible."
+"I was looking at creating some kind of service bus connecting all kinds of services together. There were
+already some products that implemented a broker, but they did not have the functionality I needed. By
+accident, I stumbled upon ZeroMQ, which is awesome. It’s very lightweight, lean, simple and easy to
+follow because the guide is very complete and reads very well. I’ve actually implemented the Titanic
+pattern and the Majordomo broker with some additions (client/worker authentication and workers
+sending a catalog explaining what they provide and how they should be addressed).
+"The beautiful thing about ZeroMQ is the fact that it is a library and not an application. You can mold it
+however you like and it simply puts boring things like queuing, reconnecting, TCP sockets and such to
+the background, making sure you can concentrate on what is important to you. I’ve implemented all
+kinds of workers/clients and the broker in Ruby, because that is the main language we use for
+development, but also some PHP clients to connect to the bus from existing PHP webapps. We use this
+service bus for cloud services, connecting all kinds of platform devices to a service bus exposing
+functionality for automation.
+"ZeroMQ is very easy to understand and if you spend a day with the guide, you’ll have good knowledge
+of how it works. I’m a network engineer, not a software developer, but managed to create a very nice
+solution for our automation needs! ZeroMQ: Thank you very much!"
  
 \end{document}
