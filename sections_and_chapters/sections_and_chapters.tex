@@ -1,27 +1,34 @@
-\documentclass[a4paper,12pt]{report}
-\usepackage{xeCJK}
+\documentclass[a4paper,12pt,oneside]{report}
 \usepackage{indentfirst}
 \usepackage[utf8]{inputenc}
 \usepackage{tikz}
 \usetikzlibrary{matrix}
 \usepackage{fancyhdr}
-\usepackage[dutch]{babel}
+\usepackage[english]{babel}
 \usepackage[babel=true]{csquotes}
 \usepackage[T1]{fontenc}
 \usepackage[explicit]{titlesec}
 \usepackage{xcolor}
 \usepackage{charter}
+\usepackage{rotating, graphicx}
+\usepackage{tcolorbox}
+\usepackage{titletoc}
+\usepackage{hyperref}
+\usepackage{times}
+\usepackage{fix-cm}
+\usepackage{amsmath}
+\usepackage{epigraph}
 
-\setCJKmainfont{SimSun}
- 
+
+%~~~~~~~~~~~~~~~~~Global Settings~~~~~~~~~~~~~~~~~~~~~~
+
+\definecolor{doc}{RGB}{105,105,105}
 \definecolor{mybluei}{RGB}{105,105,105}
 \definecolor{myblueii}{RGB}{105,105,105}
-\usepackage{rotating, graphicx}
-\usepackage{titlesec}
-\usepackage{tcolorbox}
 \newcommand\ChapterFont{\rmfamily\selectfont\huge}
 \newcommand\SectionFont{\bfseries\rmfamily\selectfont\Large}
  
+%~~~~~~~~~~~~~~~~~Chapter Settings~~~~~~~~~~~~~~~~~~~~~~
 \titleformat{\chapter}[block]
  {\normalfont\ChapterFont\huge\color{myblueii}}%\raisebox{-0.6\height}
  {\tcbset{colframe=mybluei, boxrule=0.8pt, left=0pt, right=0pt, top=0pt, bottom=0pt}\raisebox{-0.48\height}{\rotatebox{90}{\tcbox[boxsep=4pt, colback= white ]{\color{mybluei}\Large\chaptertitlename}}}\hskip 0.25em\mbox{\tcbox[ boxsep=12pt, colback=mybluei, tcbox raise = -35pt]{\color{white}\bfseries\fontsize{70}{70}\selectfont\thechapter}}}
@@ -52,9 +59,10 @@
  \color{myblueii}\hspace*{\dimexpr40pt+2\fboxsep\relax}%
  \rule{\dimexpr\textwidth-40pt-2\fboxsep\relax}{1pt}%
  ]
-  \usepackage{amsmath, amsthm, amssymb, amsfonts, enumerate}%, dlfltxbcodetips
+  \usepackage{amsthm, amssymb, amsfonts, enumerate}%, dlfltxbcodetips
  \renewcommand{\qedsymbol}{$\blacksquare$}
 
+%~~~~~~~~~~~~~~~~~Section Settings~~~~~~~~~~~~~~~~~~~~~~
 \titleformat{\section}[block]
   {\normalfont\huge\bfseries}
   {\tikz\node[
@@ -74,19 +82,158 @@
       text width=\the\dimexpr\textwidth-2em\relax,
       align=center,inner xsep=0pt] {#1};%
   }
- 
-\title{OpenStack部署手册}
-\date{2016 年 03 月 16 日}
-\author{罗燕}
- 
-\begin{document}
- 
-\maketitle
- 
-\renewcommand*\contentsname{Summary}
-\tableofcontents
 
+%~~~~~~~~~~~~~~~~~Hyperref Settings~~~~~~~~~~~~~~~~~~~~~~
  
+\hypersetup{%
+    pdfborder = {0 0 0},
+    colorlinks,
+    citecolor=red,
+    filecolor=green,
+    linkcolor=myblueii,
+    urlcolor=cyan!50!black!90
+    bookmarks=true,
+    pdftitle={ZeroMQ Guide},
+    pdfauthor={ZhangJl, LuoYan},
+}
+ 
+%~~~~~~~~~~~~~~~~~~~~~Fancy ToC~~~~~~~~~~~~~~~~~~~~~~
+
+\contentsmargin{0cm}
+\titlecontents{chapter}[0pc]
+{\addvspace{30pt}%
+\begin{tikzpicture}[remember picture, overlay]%
+\draw[fill=myblueii,draw=myblueii, rounded corners] (-4,-.1) rectangle (-0.15,.5);%
+\pgftext[left,x=-2.7cm,y=0.2cm]{\color{white}\Large \chaptertitlename\ \thecontentslabel};%
+\end{tikzpicture}\color{myblueii}\large\bfseries}%
+{}
+{}
+{\hspace*{6pt}\titlerule\hspace*{6pt}\large\bfseries \thecontentspage
+\begin{tikzpicture}[remember picture, overlay]
+\draw[fill=doc!25,draw=myblueii, rounded corners=0pt] (2pt,0) rectangle (6,0.1pt);
+\end{tikzpicture}}%
+\titlecontents{section}[2.4pc]
+{\addvspace{1pt}}
+{\contentslabel[\thecontentslabel]{2.4pc}}
+{}
+{\hfill\small \thecontentspage}
+[]
+\titlecontents{subsection}[4.8pc]
+{\addvspace{1.0pt}}
+{\contentslabel[\thecontentslabel]{2.4pc}}
+{}
+{\hfill\small\thecontentspage}
+[]
+
+\makeatletter
+\renewcommand{\tableofcontents}{%
+\chapter*{%
+\vspace*{-20\p@}%
+\begin{tikzpicture}[remember picture, overlay]%
+\pgftext[right,x=12cm,y=0.2cm]{\color{myblueii}\Huge \contentsname};%
+\draw[fill=myblueii,draw=myblueii, rounded corners=15pt] (10,-.75) rectangle (20,1);%
+\clip (10,-.75) rectangle (20,1);
+\pgftext[right,x=12cm,y=0.2cm]{\color{white}\Huge \contentsname};%
+\end{tikzpicture}}%
+\@starttoc{toc}}
+\makeatother
+
+%~~~~~~~~~~~~~~~~~~~~~Book Cover begin~~~~~~~~~~~~~~~~~~~~~~
+\renewcommand\epigraphflush{flushright}
+\renewcommand\epigraphsize{\normalsize}
+\setlength\epigraphwidth{0.7\textwidth}
+
+%\definecolor{titlepagecolor}{cmyk}{1,.60,0,.40}
+\definecolor{titlepagecolor}{RGB}{105,105,105}
+
+\DeclareFixedFont{\titlefont}{T1}{ppl}{b}{it}{0.5in}
+
+\makeatletter
+\def\printauthor{%
+    {\large \@author}}
+\makeatother
+\author{%
+    ZhangJialong\\
+    SoftWare Engnierr\\
+}
+
+% The following code is borrowed from: http://tex.stackexchange.com/a/86310/10898
+
+\newcommand\titlepagedecoration{%
+\begin{tikzpicture}[remember picture,overlay,shorten >= -10pt]
+
+\coordinate (aux1) at ([yshift=-15pt]current page.north east);
+\coordinate (aux2) at ([yshift=-410pt]current page.north east);
+\coordinate (aux3) at ([xshift=-4.5cm]current page.north east);
+\coordinate (aux4) at ([yshift=-150pt]current page.north east);
+
+\begin{scope}[titlepagecolor!40,line width=12pt,rounded corners=12pt]
+\draw
+  (aux1) -- coordinate (a)
+  ++(225:5) --
+  ++(-45:5.1) coordinate (b);
+\draw[shorten <= -10pt]
+  (aux3) --
+  (a) --
+  (aux1);
+\draw[opacity=0.6,titlepagecolor,shorten <= -10pt]
+  (b) --
+  ++(225:2.2) --
+  ++(-45:2.2);
+\end{scope}
+\draw[titlepagecolor,line width=8pt,rounded corners=8pt,shorten <= -10pt]
+  (aux4) --
+  ++(225:0.8) --
+  ++(-45:0.8);
+\begin{scope}[titlepagecolor!70,line width=6pt,rounded corners=8pt]
+\draw[shorten <= -10pt]
+  (aux2) --
+  ++(225:3) coordinate[pos=0.45] (c) --
+  ++(-45:3.1);
+\draw
+  (aux2) --
+  (c) --
+  ++(135:2.5) --
+  ++(45:2.5) --
+  ++(-45:2.5) coordinate[pos=0.3] (d);
+\draw
+  (d) -- +(45:1);
+\end{scope}
+\end{tikzpicture}%
+}
+
+%~~~~~~~~~~~~~~~~~~~~~Document begin~~~~~~~~~~~~~~~~~~~~~~
+\begin{document}
+
+
+\begin{titlepage}
+\noindent
+\titlefont \flushright ZeroMQ Guide\par
+\epigraph{Pure mathematics is on the whole distinctly more useful than applied. For what is useful above all is technique, and mathematical technique is taught mainly through pure mathematics.}%
+{\textit{Beijing 2016}\\ ZhangJl}
+\null\vfill
+\vspace*{1cm}
+\noindent
+\hfill
+\begin{minipage}{0.40\linewidth}
+    \begin{flushright}
+        \printauthor
+    \end{flushright}
+\end{minipage}
+\begin{minipage}{0.02\linewidth}
+    \rule{1pt}{125pt}
+\end{minipage}
+\titlepagedecoration
+\end{titlepage}
+
+{
+  \hypersetup{hidelinks}
+  \renewcommand*\contentsname{Summary}
+  \tableofcontents%
+}
+
+%~~~~~~~~~~~~~~~~~~~~~Content begin~~~~~~~~~~~~~~~~~~~~~~
+
 \part{First Part of this document}
  
 \chapter{First}
