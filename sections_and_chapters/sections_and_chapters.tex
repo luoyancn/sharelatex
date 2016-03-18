@@ -1,10 +1,7 @@
 \documentclass[a4paper,12pt]{report}
+\usepackage{xeCJK}
 \usepackage{indentfirst}
-\usepackage{tikz}
 \usepackage[utf8]{inputenc}
-\usepackage[explicit]{titlesec}
-\usepackage[Bjornstrup]{fncychap}
-
 \usepackage{tikz}
 \usetikzlibrary{matrix}
 \usepackage{fancyhdr}
@@ -14,6 +11,8 @@
 \usepackage[explicit]{titlesec}
 \usepackage{xcolor}
 \usepackage{charter}
+
+\setCJKmainfont{SimSun}
  
 \definecolor{mybluei}{RGB}{105,105,105}
 \definecolor{myblueii}{RGB}{105,105,105}
@@ -76,9 +75,9 @@
       align=center,inner xsep=0pt] {#1};%
   }
  
-\title{42}
-\author{Jane Doe}
-\date{\today}
+\title{OpenStack部署手册}
+\date{2016 年 03 月 16 日}
+\author{罗燕}
  
 \begin{document}
  
