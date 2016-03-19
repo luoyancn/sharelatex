@@ -1,0 +1,49 @@
+\documentclass[a4paper,12pt,oneside]{report}
+\usepackage{indentfirst}
+\usepackage[utf8]{inputenc}
+\usepackage{tikz}
+\usetikzlibrary{matrix}
+\usepackage{fancyhdr}
+\usepackage[english]{babel}
+\usepackage[babel=true]{csquotes}
+\usepackage[T1]{fontenc}
+\usepackage[explicit]{titlesec}
+\usepackage{xcolor}
+\usepackage{charter}
+\usepackage{rotating, graphicx}
+\usepackage{tcolorbox}
+\usepackage{titletoc}
+\usepackage{hyperref}
+\usepackage{times}
+\usepackage{fix-cm}
+\usepackage{amsmath}
+\usepackage{epigraph}
+\usepackage{geometry}
+
+
+%~~~~~~~~~~~~~~~~~Global Settings~~~~~~~~~~~~~~~~~~~~~~
+
+\geometry{scale=0.75,top=2cm,bottom=2cm}
+
+\definecolor{doc}{RGB}{105,105,105}
+\definecolor{mybluei}{RGB}{105,105,105}
+\definecolor{myblueii}{RGB}{105,105,105}
+\newcommand\ChapterFont{\rmfamily\selectfont\huge}
+\newcommand\SectionFont{\bfseries\rmfamily\selectfont\Large}
+
+\input{header_footer} 
+\input{chap_section} 
+\input{summary}
+\input{cover_pic}
+
+%~~~~~~~~~~~~~~~~~~~~~Document begin~~~~~~~~~~~~~~~~~~~~~~
+\begin{document}
+
+\input{cover_content}
+
+\part{First Part of this document}
+ 
+\include{chapter1}
+\include{chapter2}
+ 
+\end{document}
