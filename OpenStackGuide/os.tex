@@ -1,0 +1,189 @@
+\section{基本的安装}
+
+操作系统要求是redhat7/centos7的操作系统
+\begin{itemize}
+  \item 64位操作系统
+  \item 计算节点需要支持虚拟化
+  \item 需要 >= 1台以上的服务器或者虚拟机
+\end{itemize}
+
+\section{操作系统配置}
+\subsection{配置yum源}
+
+\begin{long-block}{bash}
+yum install https://repos.fedorapeople.org/repos/openstack/openstack-liberty/rdo-release-liberty-2.noarch.rpm -y
+
+cat >/etc/yum.repos.d/cern.repo<<EOF
+[cern-os]
+name=cern-os
+baseurl=http://linuxsoft.cern.ch/cern/centos/7/os/x86_64
+gpgcheck=1
+enabled=1
+protect=1
+priority=5
+gpgkey=http://linuxsoft.cern.ch/cern/centos/7/os/x86_64/RPM-GPG-KEY-CentOS-7
+[cern-centosplus]
+name=cern-centosplus
+baseurl=http://linuxsoft.cern.ch/cern/centos/7/centosplus/x86_64
+gpgcheck=1
+enabled=1
+protect=1
+priority=5
+[cern-cern]
+name=cern-cern
+baseurl=http://linuxsoft.cern.ch/cern/centos/7/cern/x86_64/
+gpgcheck=1
+enabled=1
+protect=1
+priority=5
+gpgkey=http://linuxsoft.cern.ch/cern/centos/7/os/x86_64/RPM-GPG-KEY-cern
+[cern-extra]
+name=cern-extra
+baseurl=http://linuxsoft.cern.ch/cern/centos/7/extras/x86_64/
+gpgcheck=1
+enabled=1
+protect=1
+priority=5
+gpgkey=http://linuxsoft.cern.ch/cern/centos/7/os/x86_64/RPM-GPG-KEY-cern
+[cern-update]
+name=cern-update
+baseurl=http://linuxsoft.cern.ch/cern/centos/7/updates/x86_64/
+gpgcheck=1
+enabled=1
+protect=1
+priority=5
+gpgkey=http://linuxsoft.cern.ch/cern/centos/7/os/x86_64/RPM-GPG-KEY-cern
+[cern-cr]
+name=cern-cr
+baseurl=http://linuxsoft.cern.ch/cern/centos/7/cr/x86_64/
+gpgcheck=1
+enabled=1
+protect=1
+priority=5
+gpgkey=http://linuxsoft.cern.ch/cern/centos/7/os/x86_64/RPM-GPG-KEY-CentOS-7
+[cern-rt]
+name=cern-rt
+baseurl=http://linuxsoft.cern.ch/cern/centos/7/rt/x86_64/
+gpgcheck=1
+enabled=1
+protect=1
+priority=5
+gpgkey=http://linuxsoft.cern.ch/cern/centos/7/os/x86_64/RPM-GPG-KEY-cern
+[cern-rhcommon]
+name=cern-rhcommon
+baseurl=http://linuxsoft.cern.ch/cern/centos/7/rhcommon/x86_64/
+gpgcheck=1
+enabled=1
+protect=1
+priority=5
+gpgkey=http://linuxsoft.cern.ch/cern/centos/7/os/x86_64/RPM-GPG-KEY-cern
+[cern-epel]
+name=cern-epel
+baseurl=http://linuxsoft.cern.ch/epel/7/x86_64/
+gpgcheck=1
+enabled=1
+protect=1
+priority=5
+gpgkey=http://linuxsoft.cern.ch/epel/RPM-GPG-KEY-EPEL-7
+EOF
+
+yum update -y
+yum install openvswitch -y
+\end{long-block}
+
+\subsection{关闭selinux}
+\begin{code-block}{bash}
+sed -i 's/SELINUX=enforcing/SELINUX=disabled/g' /etc/openldap/slapd.conf
+\end{code-block}
+
+\subsection{修改主机名}
+\begin{code-block}{bash}
+echo $hostname > /etc/hostname
+\end{code-block}
+
+\subsection{设置OVS开机启动}
+\begin{code-block}{bash}
+systemctl enable openvswitch
+systemctl start openvswitch
+\end{code-block}
+    
+\subsection{修改网络节点网卡配置}
+\begin{code-block}{bash}
+ovs-vsctl add-br br-ex
+cat >/etc/sysconfig/network-scripts/ifcfg-br-ex<<EOF
+TYPE=Ethernet
+BOOTPROTO=static
+DEFROUTE=yes
+PEERDNS=no
+PEERROUTES=no
+IPV4_FAILURE_FATAL=no
+IPV6INIT=no
+NAME=br-ex
+ONBOOT=yes
+DEVICE=br-ex
+IPADDR=10.7.0.2
+NETMASK=255.255.255.0
+GATEWAY=10.7.0.254
+DEVICETYPE=ovs
+TYPE=OVSBridge
+EOF
+cat >/etc/sysconfig/network-scripts/ifcfg-eth0<<EOF
+TYPE=Ethernet
+BOOTPROTO=static
+DEFROUTE=yes
+PEERDNS=no
+PEERROUTES=no
+IPV4_FAILURE_FATAL=no
+IPV6INIT=no
+NAME=eth0
+ONBOOT=yes
+DEVICE=eth0
+DEVICETYPE=ovs
+OVS_BRIDGE=br-ex
+TYPE=OVSPort
+EOF
+\end{code-block}
+
+\subsection{调整内核参数}
+\begin{code-block}{bash}
+#网络节点的内核参数
+cat >>/etc/sysctl.conf<<EOF
+net.ipv4.ip_forward=1
+net.ipv4.conf.all.rp_filter=0
+net.ipv4.conf.default.rp_filter=0
+EOF
+#计算节点的内核参数
+cat >>/etc/sysctl.conf<<EOF
+net.ipv4.conf.all.rp_filter=0
+net.ipv4.conf.default.rp_filter=0
+net.bridge.bridge-nf-call-iptables=1
+net.bridge.bridge-nf-call-ip6tables=1
+EOF
+\end{code-block}
+
+\subsection{修改操作系统连接数}
+\begin{code-block}{bash}
+cat >>/etc/security/limits.conf<<EOF
+*               soft    core            65536
+*               hard    rss             65536
+*               soft    nofile          1024000
+*               hard    nofile          1024000
+*               soft    nproc           1024000
+*               hard    nproc           1024000
+EOF
+\end{code-block}
+
+\subsection{修改操作系统防火墙}
+\begin{code-block}{bash}
+cat >/etc/sysconfig/iptables<<EOF
+*filter
+:INPUT ACCEPT [0:0]
+EOF
+:FORWARD ACCEPT [0:0]
+:OUTPUT ACCEPT [0:0]
+COMMIT
+\end{code-block}
+
+\noindent
+完成之后，重启物理机或者服务器
+\justifying

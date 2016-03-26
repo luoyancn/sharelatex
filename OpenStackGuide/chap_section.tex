@@ -1,0 +1,55 @@
+%~~~~~~~~~~~~~~~~~Chapter Settings~~~~~~~~~~~~~~~~~~~~~~
+\titleformat{\chapter}[block]
+ {\normalfont\ChapterFont\huge\color{myblueii}}%\raisebox{-0.6\height}
+ {\tcbset{colframe=mybluei, boxrule=0.8pt, left=0pt, right=0pt, top=0pt, bottom=0pt}\raisebox{-0.48\height}{\rotatebox{90}{\tcbox[boxsep=4pt, colback= white ]{\color{mybluei}\Large\chaptertitlename}}}\hskip 0.25em\mbox{\tcbox[ boxsep=12pt, colback=mybluei, tcbox raise = -35pt]{\color{white}\bfseries\fontsize{70}{70}\selectfont\thechapter}}}
+ {0.5em}
+ {#1\vskip0.6ex\endgraf\titlerule[1ex]}[]
+ 
+ \titleformat{name=\chapter,numberless}[block]
+ {\normalfont\selectfont\huge\color{myblueii}}
+ {}
+ {0pt}
+ {\parbox[b]{70pt}{\mbox{}}%
+ \hspace{15pt}%
+ \parbox[b]{\dimexpr\textwidth-15pt}{%
+ \raggedright\bfseries#1\vskip6pt%
+ }%
+ }
+ \titleformat{\section}
+ {\normalfont\small\sffamily\SectionFont\color{myblueii}}
+ {\colorbox{mybluei}{%
+        \parbox[c][16pt][c]{40pt}{%
+            \centering\textcolor{white}{\SectionFont\Large\rmfamily\thesection}%
+        }%
+    }%
+ }
+ {1em}
+ {#1}
+ [\vspace{-0.755\baselineskip}%
+ \color{myblueii}\hspace*{\dimexpr40pt+2\fboxsep\relax}%
+ \rule{\dimexpr\textwidth-40pt-2\fboxsep\relax}{1pt}%
+ ]
+\usepackage{amsthm, amssymb, amsfonts, enumerate}%, dlfltxbcodetips
+\renewcommand{\qedsymbol}{$\blacksquare$}
+
+%~~~~~~~~~~~~~~~~~Section Settings~~~~~~~~~~~~~~~~~~~~~~
+\titleformat{\section}[block]
+  {\normalfont\huge\bfseries}
+  {\tikz\node[
+      font=\huge\bfseries\color{white},
+      fill=gray!50,
+      rounded corners=20pt,
+      minimum height=1.6cm,
+      text width=3em,
+      align=center,
+      inner xsep=0pt] {\parbox{1.5em}{\thesection\hfill}};%
+  }
+  {-1em}
+  {\tikz\node[
+      fill=gray,
+      font=\Large\sffamily\color{white},
+      minimum height=1.6cm,
+      text width=\the\dimexpr\textwidth-2em\relax,
+      align=center,inner xsep=0pt] {#1};%
+  }
+

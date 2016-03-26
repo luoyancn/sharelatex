@@ -1,0 +1,181 @@
+\section{OpenStack Keystone的安装和配置}
+
+\subsection{安装Keystone}
+
+\begin{code-block}{bash}
+yum install openstack-keystone python-keystone python-keystoneclient\
+    python-openstackclient openstack-utils -y
+\end{code-block}
+
+
+\subsection{配置Keystone}
+
+\begin{code-block}{bash}
+openstack-config --set /etc/keystone/keystone.conf DEFAULT admin_token ADMIN_TOKEN
+openstack-config --set /etc/keystone/keystone.conf DEFAULT debug True
+openstack-config --set /etc/keystone/keystone.conf DEFAULT verbose True
+
+openstack-config --set /etc/keystone/keystone.conf database \
+    connection mysql+pymysql://keystone:keystone@controller/keystone
+    
+openstack-config --set /etc/keystone/keystone.conf eventlet_server public_workers 2
+openstack-config --set /etc/keystone/keystone.conf eventlet_server admin_workers 2
+
+openstack-config --set /etc/keystone/keystone.conf fernet_tokens \
+    fernet_tokens /etc/keystone/fernet-keys/
+openstack-config --set /etc/keystone/keystone.conf fernet_tokens max_active_keys 3
+
+openstack-config --set /etc/keystone/keystone.conf token provider fernet
+
+openstack-config --set /etc/keystone/keystone.conf os_inherit enabled True
+
+keystone-manage fernet_setup --keystone-user keystone --keystone-group keystone
+keystone-manage fernet_rotate --keystone-user keystone --keystone-group keystone
+
+keystone-manage db_sync
+
+chown -R keystone:keystone /etc/keystone /var/log/keystone
+\end{code-block}
+
+\subsection{启动Keystone}
+
+\begin{code-block}{bash}
+systemctl enable openstack-keystone
+systemctl start openstack-keystone
+\end{code-block}
+
+\subsection{初始化Keystone}
+设定环境变量
+
+\begin{code-block}{bash}
+export OS_TOKEN=ADMIN_TOKEN
+export OS_URL=http://controller:35357/v3
+export OS_IDENTITY_API_VERSION=3
+\end{code-block}
+
+创建OpenStack服务及其url
+
+\begin{long-block}{bash}
+openstack service create --name keystone --description "OpenStack Identity" identity
+openstack endpoint create --region beijing identity public http://controller:5000/v2.0
+openstack endpoint create --region beijing identity internal http://controller:5000/v2.0
+openstack endpoint create --region beijing identity admin http://controller:35357/v2.0
+openstack service create --name glance --description "OpenStack Image service" image
+openstack endpoint create --region beijing  image public http://controller:9292
+openstack endpoint create --region beijing  image public http://controller:9292
+openstack endpoint create --region beijing  image public http://controller:9292
+openstack service create --name cinder --description "OpenStack Block Storage" volume
+openstack service create --name cinderv2 --description "OpenStack Block Storage" volumev2
+openstack endpoint create --region beijing cinder public \
+    http://controller:8776/v1/%\(tenant_id\)s
+openstack endpoint create --region beijing cinder admin \
+    http://controller:8776/v1/%\(tenant_id\)s
+openstack endpoint create --region beijing cinder internal \
+    http://controller:8776/v1/%\(tenant_id\)s
+openstack endpoint create --region beijing cinderv2 public \
+    http://controller:8776/v2/%\(tenant_id\)s
+openstack endpoint create --region beijing cinderv2 admin \
+    http://controller:8776/v2/%\(tenant_id\)s
+openstack endpoint create --region beijing cinderv2 internal \
+    http://controller:8776/v2/%\(tenant_id\)s
+openstack service create --name neutron  --description "OpenStack Networking" network
+openstack endpoint create --region chongqing network public http://controller:9696
+openstack endpoint create --region chongqing network internal http://controller:9696
+openstack endpoint create --region chongqing network admin http://controller:9696
+openstack service create --name nova --description "OpenStack Compute" compute 
+openstack endpoint create --region beijing compute public \
+    http://controller:8774/v2.1/%\(tenant_id\)s
+openstack endpoint create --region beijing compute admin \
+    http://controller:8774/v2.1/%\(tenant_id\)s
+openstack endpoint create --region beijing compute internal \
+    http://controller:8774/v2.1/%\(tenant_id\)s
+\end{long-block}
+
+创建系统租户
+
+\begin{code-block}{bash}
+openstack project create --domain default --description "Admin Project" admin 
+openstack project create --domain default --description "Service Project" service
+\end{code-block}
+
+创建系统角色
+
+\begin{code-block}{bash}
+openstack role create admin
+openstack role create domain_admin
+openstack role create member
+openstack role create guest
+\end{code-block}
+
+创建系统用户，并分配权限
+
+\begin{long-block}{bash}
+openstack user create --domain default --project admin \
+    --project-domain default --password admin admin
+openstack role add --domain default --user admin \
+    --project-domain default --user-domain default admin  --inherited
+openstack role add --project admin --user admin \
+    --project-domain default --user-domain default admin  --inherited
+openstack user create --domain default --project service \
+    --project-domain default --password glance glance
+openstack role add --domain default --user glance \
+    --project-domain default --user-domain default admin
+openstack role add --project service --user glance \
+    --project-domain default --user-domain default admin
+openstack user create --domain default --project service \
+    --project-domain default --password neutron neutron
+openstack role add --domain default --user neutron \
+    --project-domain default --user-domain default admin
+openstack role add --project service --user neutron \
+    --project-domain default --user-domain default admin
+openstack user create --domain default --project service \
+    --project-domain default --password cinder  cinder
+openstack role add --domain default --user cinder \
+    --project-domain default --user-domain default admin
+openstack role add --project service --user cinder \
+    --project-domain default --user-domain default admin
+openstack user create --domain default --project service \
+    --project-domain default --password nova nova
+openstack role add --domain default --user nova \
+    --project-domain default --user-domain default admin
+openstack role add --project service --user nova \
+    --project-domain default --user-domain default admin
+\end{long-block}
+
+\subsection{校验Keystone安装配置}
+
+清除环境变量
+
+\begin{code-block}{bash}
+unset OS_TOKEN OS_URL
+unset OS_URL
+unset OS_IDENTITY_API_VERSION
+\end{code-block}
+
+编写环境变量文件
+
+\begin{code-block}{bash}
+cat >/root/keystone_admin_v3<<EOF
+export OS_PROJECT_DOMAIN_NAME=Default
+export OS_USER_DOMAIN_NAME=Default
+export OS_PROJECT_NAME=admin
+export OS_TENANT_NAME=admin
+export OS_USERNAME=admin
+export OS_PASSWORD=admin
+export OS_AUTH_URL=http://controller:35357/v3
+export OS_IDENTITY_API_VERSION=3
+export PS1='[\u@\h \W(keystone_admin_v3)]\$ '
+EOF
+\end{code-block}
+
+导入环境变量文件
+
+\begin{code-block}{bash}
+source /root/keystone_admin_v3
+\end{code-block}
+
+执行操作，校验安装是否成功
+
+\begin{code-block}{bash}
+openstack token issue
+\end{code-block}

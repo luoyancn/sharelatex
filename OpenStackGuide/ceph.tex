@@ -1,0 +1,196 @@
+\section{Ceph的安装和配置}
+
+\subsection{安装Ceph}
+
+\begin{code-block}{bash}
+yum install ceph -y
+\end{code-block}
+
+\subsection{修改Ceph配置文件}
+Ceph集群的最低要求
+    Ceph至少需要一个monitor，3个osd，monitor一定要是奇数个。
+    每台ceph osd节点至少需要额外的一块未格式化的磁盘。
+    另外，所有的ceph节点的配置文件最好都是完全一致的。
+
+\begin{mdframed}[linecolor=black, topline=true, bottomline=true,
+  leftline=false, rightline=false, userdefinedwidth=\textwidth]
+\begin{minted}
+[fontsize=\footnotesize]
+{bash}
+cat >/etc/ceph/ceph.conf<<EOF
+[global]
+fsid = a7f64266-0894-4f1e-a635-d0aeaca0e993
+public network = 10.10.2.0/24
+cluster network = 10.10.2.0/24
+auth cluster required = cephx
+auth service required = cephx
+auth client required = cephx
+filestore xattr use omap = true
+osd pool default size = 2
+osd pool default min size = 1
+osd pool default pg num = 333
+osd pool default pgp num = 333
+osd crush chooseleaf type = 1
+mon osd full ratio = .80
+mon osd nearfull ratio = .70
+
+debug lockdep = 0/0
+debug context = 0/0
+debug crush = 0/0
+debug buffer = 0/0
+debug timer = 0/0
+debug journaler = 0/0
+debug osd = 0/0
+debug optracker = 0/0
+debug objclass = 0/0
+debug filestore = 0/0
+debug journal = 0/0
+debug ms = 0/0
+debug monc = 0/0
+debug tp = 0/0
+debug auth = 0/0
+debug finisher = 0/0
+debug heartbeatmap = 0/0
+debug perfcounter = 0/0
+debug asok = 0/0
+debug throttle = 0/0
+
+[mon]
+mon initial members = controller,compute1,compute2
+mon host = 10.10.2.101:6789, 10.10.2.102:6789, 10.10.2.103:6789
+
+[mon.controller]
+host = controller
+mon addr = 10.10.2.101:6789
+mon data = /var/lib/ceph/mon/ceph-controller
+
+[mon.compute1]
+host = compute1
+mon addr = 10.10.2.102:6789
+mon data = /var/lib/ceph/mon/ceph-compute1
+
+[mon.compute2]
+host = compute2
+mon addr = 10.10.2.103:6789
+mon data = /var/lib/ceph/mon/ceph-compute2
+
+[osd]
+osd journal size = 1024
+osd data = /var/lib/ceph/osd/$cluster-$id
+osd journal = /var/lib/ceph/osd/$cluster-$id/journal
+
+[osd.0]
+osd host = controller
+public addr = 10.10.2.101
+cluster addr = 10.10.2.101
+
+[osd.1]
+osd host = compute1
+public addr = 10.10.2.102
+cluster addr = 10.10.2.102
+
+[osd.2]
+osd host = compute2
+public addr = 10.10.2.103
+cluster addr = 10.10.2.103
+EOF
+\end{minted}
+\end{mdframed}
+
+\subsection{创建ceph monitor key和admin key}
+
+\begin{code-block}{bash}
+ceph-authtool --create-keyring /tmp/ceph.mon.keyring --gen-key \
+    -n mon. --cap mon 'allow *'
+
+ceph-authtool --create-keyring /etc/ceph/ceph.client.admin.keyring \
+    --gen-key -n client.admin --set-uid=0 --cap mon 'allow *' \
+    --cap osd 'allow *' --cap mds 'allow'
+
+ceph-authtool /tmp/ceph.mon.keyring \
+    --import-keyring /etc/ceph/ceph.client.admin.keyring
+
+monmaptool --create --add controller 10.10.2.101  \
+                    --add compute1 10.10.2.102 \
+                    --add compute2 10.10.2.103  \
+                    --fsid a7f64266-0894-4f1e-a635-d0aeaca0e993 /tmp/monmap
+\end{code-block}
+
+\subsection{创建ceph monitor}
+\begin{code-block}{bash}
+mkdir -p /var/lib/ceph/mon/ceph-controller
+ceph-mon --mkfs -i controller --monmap /tmp/monmap \
+    --keyring /tmp/ceph.mon.keyring
+service ceph start mon
+
+scp /etc/ceph/* root@compute1:/etc/ceph
+scp /tmp/monmap root@compute1:/tmp
+scp -r /tmp/ceph.mon root@compute1:/tmp/
+ssh compute1
+mkdir -p /var/lib/ceph/mon/ceph-compute1
+ceph-mon --mkfs -i compute1 --monmap /tmp/monmap \
+    --keyring /tmp/ceph.mon.keyring
+service ceph start mon
+
+scp /etc/ceph/* root@compute2:/etc/ceph
+scp /tmp/monmap root@compute2:/tmp
+scp -r /tmp/ceph.mon root@compute2:/tmp/
+ssh compute2
+mkdir -p /var/lib/ceph/mon/ceph-compute2
+ceph-mon --mkfs -i compute1 --monmap /tmp/monmap \
+    --keyring /tmp/ceph.mon.keyring
+service ceph start mon
+\end{code-block}
+
+\subsection{创建ceph osd}
+从monitor节点拷贝如下目录到各osd节点
+/etc/ceph
+/var/lib/ceph/bootstrap-osd
+
+\begin{code-block}{bash}
+mkdir -p /var/lib/ceph/osd/ceph-0
+ceph-disk prepare --cluster ceph \
+    --cluster-uuid a7f64266-0894-4f1e-a635-d0aeaca0e993 \
+    --fs-type xfs  /dev/sdb
+ceph-disk activate /dev/sdb1
+    
+ssh compute1
+mkdir -p /var/lib/ceph/osd/ceph-1
+ceph-disk prepare --cluster ceph \
+    --cluster-uuid a7f64266-0894-4f1e-a635-d0aeaca0e993 \
+    --fs-type xfs  /dev/sdb
+ceph-disk activate /dev/sdb1
+    
+ssh compute2
+mkdir -p /var/lib/ceph/osd/ceph-0
+ceph-disk prepare --cluster ceph \
+    --cluster-uuid a7f64266-0894-4f1e-a635-d0aeaca0e993 \
+    --fs-type xfs  /dev/sdb
+ceph-disk activate /dev/sdb1
+\end{code-block}
+
+\subsection{创建ceph poolh和相关用户}
+
+\begin{code-block}{bash}
+ceph osd pool create volumes 3 3 replicated
+ceph auth get-or-create client.awcloud mon 'allow r' \
+    osd 'allow class-read object_prefix rbd_children,allow rwx pool=volumes'
+ceph auth get-or-create client.awcloud | tee /etc/ceph/ceph.client.awcloud.keyring
+\end{code-block}
+
+\subsection{导入ceph到libvirt}
+
+\begin{code-block}{bash}
+export secret_id=9d257295-27ea-4810-4106-f0e9d0ead209
+cat > secret.xml <<EOF
+    <secret ephemeral='no' private='no'>
+      <uuid>$secret_id</uuid>
+      <usage type='ceph'>
+        <name>client.awcloud</name>
+      </usage>
+    </secret>
+EOF
+virsh secret-define --file secret.xml
+ceph auth get-key client.awcloud | tee client.awcloud.key
+virsh secret-set-value --secret $secret_id --base64 $(cat client.awcloud.key)
+\end{code-block}

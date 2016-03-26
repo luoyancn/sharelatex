@@ -9,7 +9,7 @@ help:
 	@echo "  latexpdf   to make LaTeX files and run them through pdflatex"
 
 clean:
-	rm -rf $(BUILDDIR)/*
+	rm -rf *.aux *.bbl *.blg *.log *.out *.pyg *.toc
 
 echo:
 	@echo $(BASENAME)

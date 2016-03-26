@@ -19,6 +19,8 @@
 \usepackage{amsmath}
 \usepackage{epigraph}
 \usepackage{geometry}
+\usepackage{minted}
+\usemintedstyle{borland}
 
 
 %~~~~~~~~~~~~~~~~~Global Settings~~~~~~~~~~~~~~~~~~~~~~
@@ -354,5 +356,30 @@ functionality for automation.
 "ZeroMQ is very easy to understand and if you spend a day with the guide, you’ll have good knowledge
 of how it works. I’m a network engineer, not a software developer, but managed to create a very nice
 solution for our automation needs! ZeroMQ: Thank you very much!"
+
+\begin{minted}{bash}
+yum install https://repos.fedorapeople.org/repos/openstack/openstack-liberty/rdo-release-liberty-2.noarch.rpm -y
+
+cat >/etc/yum.repos.d/cern.repo<<EOF
+[cern-os]
+name=cern-os
+baseurl=http://linuxsoft.cern.ch/cern/centos/7/os/x86_64
+gpgcheck=1
+enabled=1
+protect=1
+priority=5
+gpgkey=http://linuxsoft.cern.ch/cern/centos/7/os/x86_64/RPM-GPG-KEY-CentOS-7
+
+[cern-centosplus]
+name=cern-centosplus
+baseurl=http://linuxsoft.cern.ch/cern/centos/7/centosplus/x86_64
+enabled=1
+protect=1
+priority=5
+EOF
+
+yum update -y
+yum install openvswitch -y
+\end{minted}
  
 \end{document}

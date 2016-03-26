@@ -1,0 +1,100 @@
+\section{Libvirt配置}
+\subsection{创建CA证书}
+
+\begin{code-block}{bash}
+mkdir -p /etc/pki/libvirt/private;
+mkdir -p /opt/libvirttls;
+cd /opt/libvirttls
+certtool --generate-privkey > cakey.pem
+cat >ca.info<<EOF
+cn = Awcloud
+ca
+cert_signing_key
+expiration_days = 3650
+EOF
+certtool --generate-self-signed --load-privkey cakey.pem \
+         --template ca.info --outfile cacert.pem
+\end{code-block}
+
+将生成的cakey.pem和cacert.pem复制到所有node节点的/etc/pki/CA下
+
+\subsection{创建服务器证书}
+
+\begin{code-block}{bash}
+mkdir -p /etc/pki/libvirt/private;
+mkdir -p /opt/libvirttls;
+cd /opt/libvirttls
+certtool --generate-privkey > serverkey.pem
+export host=`hostname`
+cat> server.info<<EOF
+organization = Awcloud
+cn = $host
+tls_www_server
+encryption_key
+signing_key
+expiration_days = 3650
+EOF
+certtool --generate-certificate --load-privkey serverkey.pem \
+         --load-ca-certificate /etc/pki/CA/cacert.pem \
+         --load-ca-privkey /etc/pki/CA/cakey.pem \
+         --template server.info \
+         --outfile servercert.pem
+mv servercert.pem /etc/pki/libvirt;
+mv serverkey.pem /etc/pki/libvirt/private;
+\end{code-block}
+
+\subsection{制作客户端证书}
+
+\begin{code-block}{bash}
+mkdir -p /etc/pki/libvirt/private;
+mkdir -p /opt/libvirttls;
+cd /opt/libvirttls
+certtool --generate-privkey > clientkey.pem
+export host=`hostname`
+cat> client.info<<EOF
+country = CN
+state = HB
+locality = Beijing
+organization = Awcloud
+cn = $host
+tls_www_client
+encryption_key
+signing_key
+expiration_days = 3650
+EOF
+certtool --generate-certificate --load-privkey clientkey.pem \
+         --load-ca-certificate /etc/pki/CA/cacert.pem \
+         --load-ca-privkey /etc/pki/CA/cakey.pem \
+         --template client.info \
+         --outfile clientcert.pem
+mv clientcert.pem /etc/pki/libvirt;
+mv clientkey.pem /etc/pki/libvirt/private;
+\end{code-block}
+
+\subsection{修改libvirt配置参数}
+
+\begin{code-block}{bash}
+sed -i 's/#LIBVIRTD_ARGS="--listen"/LIBVIRTD_ARGS="--listen"/g' \
+    /etc/sysconfig/libvirtd
+sed -i 's/#listen_tls = 0/listen_tls = 1/g' /etc/libvirt/libvirtd.conf
+sed -i 's/#tls_port = "16514"/tls_port = "16514"/g' /etc/libvirt/libvirtd.conf
+sed -i 's/#tls_no_verify_certificate = 1/tls_no_verify_certificate = 1/g' \
+    /etc/libvirt/libvirtd.conf
+sed -i 's/#ca_file = "\/etc\/pki\/CA\/cacert.pem"/\
+ca_file = "\/etc\/pki\/CA\/cacert.pem"/g' \
+    /etc/libvirt/libvirtd.conf
+sed -i 's/#cert_file = "\/etc\/pki\/libvirt\/servercert.pem"/\
+cert_file = "\/etc\/pki\/libvirt\/servercert.pem"/g' \
+    /etc/libvirt/libvirtd.conf
+sed -i 's/#key_file = "\/etc\/pki\/libvirt\/private\/serverkey.pem"/\
+key_file = "\/etc\/pki\/libvirt\/private\/serverkey.pem"/g' \
+    /etc/libvirt/libvirtd.conf
+\end{code-block}
+
+\subsection{重启并验证libvirt}
+\begin{code-block}{bash}
+systemctl restart libvirtd
+netstat -tnal | grep 16514
+virsh -c qemu+tls://<hostname>/qemu
+\end{code-block}
+如果16514端口监听正常，则说明libvirt配置成功；如果virsh连接正常，则说明libvirt的互信配置正常
