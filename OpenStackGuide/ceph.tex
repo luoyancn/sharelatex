@@ -137,7 +137,7 @@ scp /tmp/monmap root@compute2:/tmp
 scp -r /tmp/ceph.mon root@compute2:/tmp/
 ssh compute2
 mkdir -p /var/lib/ceph/mon/ceph-compute2
-ceph-mon --mkfs -i compute1 --monmap /tmp/monmap \
+ceph-mon --mkfs -i compute2 --monmap /tmp/monmap \
     --keyring /tmp/ceph.mon.keyring
 service ceph start mon
 \end{code-block}
@@ -162,7 +162,7 @@ ceph-disk prepare --cluster ceph \
 ceph-disk activate /dev/sdb1
     
 ssh compute2
-mkdir -p /var/lib/ceph/osd/ceph-0
+mkdir -p /var/lib/ceph/osd/ceph-2
 ceph-disk prepare --cluster ceph \
     --cluster-uuid a7f64266-0894-4f1e-a635-d0aeaca0e993 \
     --fs-type xfs  /dev/sdb

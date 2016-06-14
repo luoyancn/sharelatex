@@ -1,3 +1,4 @@
+\chapter{OpenStack组件的安装部署}
 \section{OpenStack Keystone的安装和配置}
 
 \subsection{安装Keystone}
@@ -57,9 +58,9 @@ export OS_IDENTITY_API_VERSION=3
 
 \begin{long-block}{bash}
 openstack service create --name keystone --description "OpenStack Identity" identity
-openstack endpoint create --region beijing identity public http://controller:5000/v2.0
-openstack endpoint create --region beijing identity internal http://controller:5000/v2.0
-openstack endpoint create --region beijing identity admin http://controller:35357/v2.0
+openstack endpoint create --region beijing identity public http://controller:5000/v3
+openstack endpoint create --region beijing identity internal http://controller:5000/v3
+openstack endpoint create --region beijing identity admin http://controller:35357/v3
 openstack service create --name glance --description "OpenStack Image service" image
 openstack endpoint create --region beijing  image public http://controller:9292
 openstack endpoint create --region beijing  image public http://controller:9292
@@ -79,9 +80,9 @@ openstack endpoint create --region beijing cinderv2 admin \
 openstack endpoint create --region beijing cinderv2 internal \
     http://controller:8776/v2/%\(tenant_id\)s
 openstack service create --name neutron  --description "OpenStack Networking" network
-openstack endpoint create --region chongqing network public http://controller:9696
-openstack endpoint create --region chongqing network internal http://controller:9696
-openstack endpoint create --region chongqing network admin http://controller:9696
+openstack endpoint create --region beijing network public http://controller:9696
+openstack endpoint create --region beijing network internal http://controller:9696
+openstack endpoint create --region beijing network admin http://controller:9696
 openstack service create --name nova --description "OpenStack Compute" compute 
 openstack endpoint create --region beijing compute public \
     http://controller:8774/v2.1/%\(tenant_id\)s
