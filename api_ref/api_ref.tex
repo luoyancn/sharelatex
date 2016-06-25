@@ -1,0 +1,205 @@
+\documentclass[oneside]{book}
+\usepackage{xeCJK}
+\usepackage{indentfirst}
+\usepackage{fancyhdr}
+\usepackage{minted}
+\usepackage{geometry}
+\usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage[utf8]{inputenc}
+
+\usemintedstyle{native}
+\hypersetup{%
+    bookmarks=true,
+    % 设置文档属性的标题
+    pdftitle={VMWare 设计文档},
+    % 设置文档属性的作者
+    pdfauthor={北京海云捷迅科技有限公司}
+}
+
+\setCJKmainfont{SimSun}
+\geometry{left=2.5cm,right=2.5cm,top=2.5cm,bottom=2.5cm}
+
+\pagestyle{fancy}
+\fancyhf{}
+\lhead{VMWare设计文档}
+\rhead{\includegraphics[scale=0.02]{cloud.png}}
+\renewcommand{\headrulewidth}{0.5pt}
+\renewcommand{\footrulewidth}{0.5pt}
+\cfoot{\thepage}
+
+% 设置chapter章节页的页眉页脚
+\fancypagestyle{plain}{
+    \fancyhf{}
+    \lhead{VMWare设计文档}
+    \rhead{\includegraphics[scale=0.02]{cloud.png}}
+	\renewcommand{\headrulewidth}{0.5pt}
+	\renewcommand{\footrulewidth}{0.5pt}
+    \cfoot{\thepage}
+}
+
+\begin{document}
+
+\begin{titlepage}
+	\centering{
+	{\fontsize{40}{48}\selectfont VMWare 设计文档} }\\
+	\vspace{\fill}
+	\centering{\Large{北京海云捷迅科技有限公司}}\\
+	\vspace{80mm}
+\end{titlepage}
+
+\newpage
+\frontmatter
+{
+  \hypersetup{%
+      pdfborder = {0 0 0},
+      colorlinks,
+      citecolor=red,
+      filecolor=green,
+      linkcolor=myblueii,
+      urlcolor=cyan!50!black!90
+  }
+  \renewcommand*\contentsname{目录}
+  \tableofcontents%
+  % 不在目录页显示页眉页脚
+  \thispagestyle{empty}
+}
+
+% 页码从正文开始计算，不从目录开始
+\mainmatter
+
+\chapter{快照管理}
+\section{创建快照}
+\begin{itemize}
+\item HTTP方法
+\mint{http}|POST|
+\item URL
+\mint{http}|/v2/{tenant_id}/servers/{server_id}/os-vmware-snapshot|
+\item 参数
+\begin{minted}{json}
+{
+    "os-vmware-snapshot": {
+        "desc": "zhangbb"                             # 快照的描述
+    }
+}
+\end{minted}
+\item 返回值
+\begin{minted}{json}
+无
+\end{minted}
+\end{itemize}
+
+\section{查询快照}
+\begin{itemize}
+\item HTTP方法
+\mint{http}|GET|
+\item URL
+\mint{http}|/v2/{tenant_id}/servers/{server_id}/os-vmware-snapshot|
+\item 参数
+\begin{minted}{json}
+无
+\end{minted}
+\item 返回值
+\begin{minted}{json}
+{
+    "snapshots": {
+        "1c32169a748243ccb182b92715155c2c": {             # 快照ID
+            "id": "2",
+            "quiesced": "False",
+            "state": "poweredOff",                        # 快照状态
+            "description": "first",                       # 快照描述
+            "createTime": "2016-06-23 18:20:59.679318"    # 快照的创建时间
+        },
+        "a141027e42e84ebb9d6ef23e7e334080": {
+            "quiesced": "False",
+            "state": "poweredOff",
+            "description": "second",
+            "parent": "1c32169a748243ccb182b92715155c2c", # 父快照的id
+            "id": "3",
+            "createTime": "2016-06-23 18:21:35.108599"
+        }
+    }
+}
+\end{minted}
+\end{itemize}
+
+\section{删除快照}
+\begin{itemize}
+\item HTTP方法
+\mint{http}|DELETE|
+\item URL
+\mint{http}|/v2/{tenant_id}/servers/{server_id}/os-vmware-snapshot/{snapshot_id}|
+\item 参数
+\begin{minted}{json}
+无
+\end{minted}
+\item 返回值
+\begin{minted}{json}
+无
+\end{minted}
+\end{itemize}
+
+\section{回滚快照}
+\begin{itemize}
+\item HTTP方法
+\mint{http}|POST|
+\item URL
+\mint{http}|/v2/{tenant_id}/servers/{server_id}/os-vmware-snapshot/{snapshot_id}/revert|
+\item 参数
+\begin{minted}{json}
+{
+    "os-vmware-snapshot": {
+        "start_after_revert": true                # 回滚之后，是否打开vm电源
+    }
+}
+\end{minted}
+\item 返回值
+\begin{minted}{json}
+无
+\end{minted}
+\end{itemize}
+
+\chapter{克隆管理}
+\section{克隆VM}
+\begin{itemize}
+\item HTTP方法
+\mint{http}|POST|
+\item URL
+\mint{http}|/v2/{project_id}/servers/{server_id}/os-server-clone/clone|
+\item 参数
+\begin{minted}{json}
+{
+    "os-server-clone": {
+        "name": "copy", # 必须参数，克隆出来的虚拟机的名字
+        "network_id": "fec51b66-62fa-4176-8891-398a37af3742",
+                        # 必须参数，克隆的虚拟机使用的网络id
+        "availability_zone": "nova:compute1:domain-1(cluster1)",
+                        # 可选参数，与nova boot当中的availability_zone意义一致
+        "preferred_esxi": "192.168.1.84",
+                        # 可选参数，指定esxi主机
+        "preferred_datastore": "datastore1"
+                        # 可选参数，指定datastore
+    }
+}
+\end{minted}
+\item 返回值
+\begin{minted}{json}
+无
+\end{minted}
+\item 特殊说明
+\begin{minted}{json}
+preferred_esxi和preferred_datastore参数要么同时传递，要么同时都不传递。如果以上
+2个参数只传递了一个参数，则clone的结果，是随机选择esxi和datastore进行，不会报错。
+\end{minted}
+\item 使用限制
+\begin{minted}{json}
+由于vmware在clone操作的时候，针对虚拟机的存储设备是进行的全拷贝，即如果原始虚拟
+机存在3块磁盘，则clone之后的虚拟机也会拥有3块磁盘。这在openstack环境中遇到了麻
+烦：虚拟机所有的额外添加的磁盘，都是由cinder提供并管理的。如果在nova层面对多块
+盘的虚拟机进行了clone操作，则会出现一个问题：clone出来的虚拟机的额外磁盘，无法
+被任何oepnstack项目管理。因此，在openstack环境下，做了部分的限制：不允许对挂载
+了volume的虚拟机进行clone操作。
+\end{minted}
+\end{itemize}
+
+\end{document}
